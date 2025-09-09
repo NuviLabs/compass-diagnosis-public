@@ -442,67 +442,9 @@
 
 _Report generated via QR code scan from Compass Scanner App_`;
 
-            // 원래 잘 작동하던 Blocks API 형식 유지 + plain text 추가
+            // 간단하고 확실한 text 전용 메시지
             slackMessage = {
-                text: plainTextMessage,
-                blocks: [
-                    {
-                        type: "header",
-                        text: {
-                            type: "plain_text",
-                            text: `🔧 System Diagnosis Report`
-                        }
-                    },
-                    {
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `*🏥 Facility Info:*\n• Name: ${facilityName}\n• ID: ${facilityId}\n• Device Serial: ${serialNumber}\n• Build: ${buildInfo}\n• Timestamp: ${timestamp}`
-                        }
-                    },
-                    {
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `*Overall Status:* ${systemStatus}`
-                        }
-                    },
-                    {
-                        type: "section",
-                        fields: [
-                            {
-                                type: "mrkdwn",
-                                text: `*🌐 Network Status:*\n• Ethernet: ${networkInfo.ethernet_connected ? '✅ Connected' : '❌ Disconnected'}\n• Internet: ${networkInfo.internet_connected ? '✅ Connected' : '❌ No connection'}\n• IP: ${networkInfo.ip_address || 'Not assigned'}`
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*📡 Speed Test:*\n• Download: ${networkInfo.download_speed_mbps || 'N/A'} Mbps\n• Upload: ${networkInfo.upload_speed_mbps || 'N/A'} Mbps\n• Latency: ${networkInfo.latency_ms || 'N/A'}ms`
-                            }
-                        ]
-                    },
-                    {
-                        type: "section",
-                        fields: [
-                            {
-                                type: "mrkdwn",
-                                text: `*📷 USB Devices:*\n• Barcode Scanners: ${barcodeScanners.length > 0 ? `✅ Connected (${barcodeScanners.length})` : '❌ Not detected'}\n• Cameras: ${cameras.length > 0 ? `✅ Connected (${cameras.length})` : '❌ Not detected'}`
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*📱 Device Info:*\n• Serial: ${serialNumber}\n• Build: ${buildInfo}`
-                            }
-                        ]
-                    },
-                    {
-                        type: "context",
-                        elements: [
-                            {
-                                type: "mrkdwn",
-                                text: `_Report generated via QR code scan from Compass Scanner App • ${timestamp}_`
-                            }
-                        ]
-                    }
-                ]
+                text: plainTextMessage
             };
             
             // JSON 데이터 표시 준비
