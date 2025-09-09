@@ -397,54 +397,66 @@
             const networkInfo = diagnosisData.network_diagnosis || {};
             const facilityName = diagnosisData.facility_name || 'Unknown';
             const facilityId = diagnosisData.facility_id || 'Unknown';
-            const serialNumber = diagnosisData.serial_number || 'Unknown';
-            const buildInfo = diagnosisData.build_info || 'Unknown';
-            const timestamp = diagnosisData.timestamp || 'Unknown';
             
-            // USB 장치 정보
-            const barcodeScanners = diagnosisData.usb_barcode_scanners || [];
-            const cameras = diagnosisData.usb_cameras || [];
-            
-            // 전체 시스템 상태 판단
-            const systemStatus = (() => {
-                const networkOk = networkInfo.ethernet_connected && networkInfo.internet_connected;
-                const usbOk = barcodeScanners.length > 0 && cameras.length > 0;
-                
-                if (networkOk && usbOk) return "✅ System Fully Operational";
-                if (networkOk && !usbOk) return "⚠️ Network OK, USB Issues";
-                if (!networkOk && usbOk) return "⚠️ USB OK, Network Issues";
-                return "❌ Multiple Issues Detected";
-            })();
-            
-            // Plain text 메시지 생성 (SlackWebhookService.kt 스타일)
-            const plainTextMessage = `🔧 System Diagnosis Report - ${facilityName}
-
-*Facility Info:*
-• Name: ${facilityName}
-• ID: ${facilityId}
-• Device Serial: ${serialNumber}
-• Build: ${buildInfo}
-• Timestamp: ${timestamp}
-
-*Overall Status:* ${systemStatus}
-
-*Network Status:*
-• Ethernet: ${networkInfo.ethernet_connected ? '✅ Connected' : '❌ Disconnected'}
-• IP Address: ${networkInfo.ip_address || 'Not assigned'}
-• Internet: ${networkInfo.internet_connected ? '✅ Connected' : '❌ No connection'}
-• Download Speed: ${networkInfo.download_speed_mbps || 'N/A'} Mbps
-• Upload Speed: ${networkInfo.upload_speed_mbps || 'N/A'} Mbps
-• Latency: ${networkInfo.latency_ms || 'N/A'}ms
-
-*USB Devices:*
-• Barcode Scanners: ${barcodeScanners.length > 0 ? `✅ Connected (${barcodeScanners.length})` : '❌ Not detected'}
-• Cameras: ${cameras.length > 0 ? `✅ Connected (${cameras.length})` : '❌ Not detected'}
-
-_Report generated via QR code scan from Compass Scanner App_`;
-            
-            // ✅ 올바른 구조: text 필드만 사용
             slackMessage = {
-                text: plainTextMessage
+                text: `🔧 Compass System Diagnosis Report - ${facilityName}`,
+                blocks: [
+                    {
+                        type: "header",
+                        text: {
+                            type: "plain_text",
+                            text: `🔧 System Diagnosis Report`
+                        }
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*🏥 Facility:*\n${facilityName} (ID: ${facilityId})`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*📱 Device:*\n${diagnosisData.serial_number || 'Unknown'}`
+                            }
+                        ]
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*🌐 Network Status:*\nEthernet: ${networkInfo.ethernet_connected ? '✅' : '❌'}\nInternet: ${networkInfo.internet_connected ? '✅' : '❌'}\nIP: ${networkInfo.ip_address || 'Not assigned'}`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*📡 Speed Test:*\nDownload: ${networkInfo.download_speed_mbps || 'N/A'} Mbps\nUpload: ${networkInfo.upload_speed_mbps || 'N/A'} Mbps\nLatency: ${networkInfo.latency_ms || 'N/A'} ms`
+                            }
+                        ]
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*📷 USB Devices:*\nBarcode Scanners: ${(diagnosisData.usb_barcode_scanners || []).length}\nCameras: ${(diagnosisData.usb_cameras || []).length}`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*⏰ Diagnosis Time:*\n${diagnosisData.timestamp || 'Unknown'}`
+                            }
+                        ]
+                    },
+                    {
+                        type: "context",
+                        elements: [
+                            {
+                                type: "mrkdwn",
+                                text: `Build: ${diagnosisData.build_info || 'Unknown'} | Generated from Compass Scanner App`
+                            }
+                        ]
+                    }
+                ]
             };
             
             // JSON 데이터 표시 준비
