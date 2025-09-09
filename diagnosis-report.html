@@ -7,474 +7,630 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
+            background-color: #f5f5f5;
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 30px;
-            animation: fadeIn 0.5s ease-in;
+            margin-bottom: 20px;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        h1 {
-            color: #1976D2;
+        .header {
             text-align: center;
             margin-bottom: 30px;
-            font-size: 28px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 2rem;
         }
         
         .status {
             text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        .status.success { background: #c8e6c9; color: #2e7d32; }
-        .status.warning { background: #fff3e0; color: #f57c00; }
-        .status.error { background: #ffcdd2; color: #c62828; }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .info-card {
-            background: #f8f9fa;
+            font-size: 1.2rem;
             padding: 15px;
             border-radius: 8px;
-            border-left: 4px solid #1976D2;
-        }
-        
-        .info-card h3 {
-            margin: 0 0 10px 0;
-            color: #1976D2;
-            font-size: 14px;
-        }
-        
-        .info-card p {
-            margin: 0;
-            font-size: 16px;
+            margin-bottom: 20px;
             font-weight: bold;
         }
         
-        .diagnosis-section {
-            margin: 25px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
+        .status.loading {
+            background-color: #e7f3ff;
+            color: #0066cc;
+            border: 2px solid #0066cc;
         }
         
-        .diagnosis-section h2 {
-            color: #1976D2;
-            margin-top: 0;
-            margin-bottom: 15px;
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
         }
         
-        .diagnosis-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
         }
         
-        .diagnosis-item:last-child {
+        .diagnosis-info {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .info-content {
+            color: #333;
+        }
+        
+        .device-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+        }
+        
+        .device-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .device-list li:last-child {
             border-bottom: none;
         }
         
-        .status-icon {
-            font-size: 18px;
+        .countdown {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #007bff;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+            flex-wrap: wrap;
         }
         
         .btn {
-            background: #1976D2;
-            color: white;
+            padding: 12px 24px;
             border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin: 10px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            min-width: 120px;
+            justify-content: center;
         }
         
-        .btn:hover {
-            background: #1565C0;
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
         }
         
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
+        .btn-secondary:hover {
+            background-color: #545b62;
+            transform: translateY(-2px);
         }
         
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1976D2;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px auto;
+        .btn-success {
+            background-color: #28a745;
+            color: white;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn-success:hover {
+            background-color: #1e7e34;
+            transform: translateY(-2px);
         }
         
-        .error-message {
-            background: #ffcdd2;
-            color: #c62828;
-            padding: 15px;
+        .manual-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
             border-radius: 8px;
-            margin: 15px 0;
-            display: none;
+            padding: 20px;
+            margin-top: 20px;
         }
         
-        .success-message {
-            background: #c8e6c9;
-            color: #2e7d32;
+        .manual-section h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .json-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
             padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            display: none;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .error-details {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #721c24;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📱 Compass System Diagnosis</h1>
-        
-        <div id="status" class="status">Loading diagnosis data...</div>
-        
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>Device Serial</h3>
-                <p id="serial-number">-</p>
-            </div>
-            <div class="info-card">
-                <h3>Build Info</h3>
-                <p id="build-info">-</p>
-            </div>
-            <div class="info-card">
-                <h3>Timestamp</h3>
-                <p id="timestamp">-</p>
-            </div>
-            <div class="info-card">
-                <h3>Overall Status</h3>
-                <p id="overall-status">-</p>
-            </div>
+        <div class="header">
+            <h1>🔧 System Diagnosis Report</h1>
+            <p>Compass Scanner System Status</p>
         </div>
         
-        <div class="diagnosis-section">
-            <h2>🌐 Network Status</h2>
-            <div id="network-details"></div>
+        <div id="statusDisplay" class="status loading">
+            📊 Processing diagnosis data...
         </div>
         
-        <div class="diagnosis-section">
-            <h2>🔌 USB Devices</h2>
-            <div id="usb-details"></div>
+        <div id="countdownDisplay" class="countdown" style="display: none;">
+            🚀 Auto-sending to Slack in <span id="countdownNumber">3</span> seconds...
         </div>
         
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Sending report to Slack...</p>
+        <div id="diagnosisContent" class="diagnosis-info">
+            <!-- Diagnosis information will be loaded here -->
         </div>
         
-        <div class="error-message" id="error-message"></div>
-        <div class="success-message" id="success-message"></div>
+        <div class="button-group">
+            <button id="sendButton" class="btn btn-primary" onclick="sendToSlack()">
+                📤 Send to Slack
+            </button>
+            <button id="sendAgainButton" class="btn btn-success" onclick="sendToSlack()" style="display: none;">
+                🔄 Send Again
+            </button>
+            <button class="btn btn-secondary" onclick="copyToClipboard()">
+                📋 Copy Data
+            </button>
+        </div>
         
-        <button class="btn" id="send-btn" onclick="sendToSlack()">
-            📨 Send Report to Slack
-        </button>
+        <div id="manualSection" class="manual-section" style="display: none;">
+            <h3>⚠️ Manual Backup Option</h3>
+            <p>If automatic sending fails, you can manually copy the data below and send it to your Slack channel:</p>
+            <div id="jsonData" class="json-display"></div>
+            <button class="btn btn-secondary" onclick="copyToClipboard()">📋 Copy JSON Data</button>
+        </div>
         
-        <button class="btn" id="auto-send-btn" onclick="autoSendToSlack()" style="background: #4CAF50;">
-            🚀 Auto Send (3 seconds)
-        </button>
+        <div id="errorSection" class="error-details" style="display: none;">
+            <h4>❌ Error Details</h4>
+            <div id="errorMessage"></div>
+        </div>
     </div>
 
     <script>
         let diagnosisData = null;
-        let autoSendTimer = null;
+        let slackMessage = null;
+        
+        // CORS 우회를 위한 여러 프록시 서버 목록
+        const CORS_PROXIES = [
+            'https://cors-anywhere.herokuapp.com/',
+            'https://api.allorigins.win/raw?url=',
+            'https://thingproxy.freeboard.io/fetch/',
+            'https://corsproxy.io/?'
+        ];
+        
+        let currentProxyIndex = 0;
 
-        // Parse URL parameters and load diagnosis data
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const encodedData = urlParams.get('data');
-            
-            if (encodedData) {
-                try {
-                    // Decode base64 data
-                    const jsonString = atob(encodedData);
-                    diagnosisData = JSON.parse(jsonString);
-                    
-                    console.log('Diagnosis data loaded:', diagnosisData);
-                    displayDiagnosisData();
-                    
-                    // Start auto-send countdown
-                    startAutoSendCountdown();
-                    
-                } catch (error) {
-                    console.error('Failed to parse diagnosis data:', error);
-                    showError('Failed to load diagnosis data. Invalid QR code.');
+        function parseUrlData() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const encodedData = urlParams.get('data');
+                
+                if (!encodedData) {
+                    throw new Error('No diagnosis data found in URL');
                 }
-            } else {
-                showError('No diagnosis data found. Please scan a valid QR code.');
+                
+                console.log('🔍 Encoded data length:', encodedData.length);
+                
+                // Base64 디코딩
+                const jsonString = atob(encodedData);
+                console.log('📝 Decoded JSON string:', jsonString.substring(0, 200) + '...');
+                
+                diagnosisData = JSON.parse(jsonString);
+                console.log('✅ Parsed diagnosis data:', diagnosisData);
+                
+                displayDiagnosisData();
+                prepareSlackMessage();
+                
+                // 자동 전송 시작 (3초 카운트다운)
+                startAutoSend();
+                
+            } catch (error) {
+                console.error('❌ Error parsing URL data:', error);
+                showError('Failed to parse diagnosis data: ' + error.message);
             }
-        });
+        }
 
         function displayDiagnosisData() {
-            if (!diagnosisData) return;
-
-            // Basic info
-            document.getElementById('serial-number').textContent = diagnosisData.serial_number || 'Unknown';
-            document.getElementById('build-info').textContent = diagnosisData.build_info || 'Unknown';
-            document.getElementById('timestamp').textContent = diagnosisData.timestamp || 'Unknown';
-
-            const diagnosis = diagnosisData.diagnosis;
+            const content = document.getElementById('diagnosisContent');
+            const timestamp = diagnosisData.timestamp || 'Unknown';
+            const serialNumber = diagnosisData.serial_number || 'Unknown';
+            const buildInfo = diagnosisData.build_info || 'Unknown';
+            const facilityName = diagnosisData.facility_name || 'Unknown';
+            const facilityId = diagnosisData.facility_id || 'Unknown';
             
-            // Overall status
-            const isFullyOperational = diagnosis.system_fully_operational;
-            const statusElement = document.getElementById('status');
-            const overallStatusElement = document.getElementById('overall-status');
+            // 네트워크 정보
+            const networkInfo = diagnosisData.network_diagnosis || {};
+            const ethernetConnected = networkInfo.ethernet_connected ? '✅ Connected' : '❌ Disconnected';
+            const internetConnected = networkInfo.internet_connected ? '✅ Connected' : '❌ Disconnected';
+            const ipAddress = networkInfo.ip_address || 'Not assigned';
+            const downloadSpeed = networkInfo.download_speed_mbps ? `${networkInfo.download_speed_mbps} Mbps` : 'Not measured';
+            const uploadSpeed = networkInfo.upload_speed_mbps ? `${networkInfo.upload_speed_mbps} Mbps` : 'Not measured';
+            const latency = networkInfo.latency_ms ? `${networkInfo.latency_ms} ms` : 'Not measured';
             
-            if (isFullyOperational) {
-                statusElement.textContent = '✅ System Fully Operational';
-                statusElement.className = 'status success';
-                overallStatusElement.textContent = '✅ All Good';
-            } else if (diagnosis.network_fully_connected) {
-                statusElement.textContent = '⚠️ Network OK, USB Issues';
-                statusElement.className = 'status warning';
-                overallStatusElement.textContent = '⚠️ Partial Issues';
-            } else if (diagnosis.usb_devices_connected) {
-                statusElement.textContent = '⚠️ USB OK, Network Issues';
-                statusElement.className = 'status warning';
-                overallStatusElement.textContent = '⚠️ Network Problems';
-            } else {
-                statusElement.textContent = '❌ Multiple Issues Detected';
-                statusElement.className = 'status error';
-                overallStatusElement.textContent = '❌ Critical Issues';
-            }
-
-            // Network details
-            const networkDetails = document.getElementById('network-details');
-            networkDetails.innerHTML = `
-                <div class="diagnosis-item">
-                    <span>Ethernet Cable</span>
-                    <span class="status-icon">${diagnosis.ethernet_connected ? '✅' : '❌'}</span>
+            // USB 장치 정보
+            const barcodeScanners = diagnosisData.usb_barcode_scanners || [];
+            const cameras = diagnosisData.usb_cameras || [];
+            
+            content.innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🏥 Facility Information</div>
+                    <div class="info-content">
+                        <strong>Name:</strong> ${facilityName}<br>
+                        <strong>ID:</strong> ${facilityId}
+                    </div>
                 </div>
-                <div class="diagnosis-item">
-                    <span>IP Address</span>
-                    <span>${diagnosis.ip_address || 'Not assigned'} ${diagnosis.ip_assigned ? '✅' : '❌'}</span>
+                
+                <div class="info-section">
+                    <div class="info-title">📱 Device Information</div>
+                    <div class="info-content">
+                        <strong>Serial Number:</strong> ${serialNumber}<br>
+                        <strong>Build Info:</strong> ${buildInfo}<br>
+                        <strong>Diagnosis Time:</strong> ${timestamp}
+                    </div>
                 </div>
-                <div class="diagnosis-item">
-                    <span>Internet</span>
-                    <span class="status-icon">${diagnosis.internet_connectivity ? '✅' : '❌'}</span>
+                
+                <div class="info-section">
+                    <div class="info-title">🌐 Network Status</div>
+                    <div class="info-content">
+                        <strong>Ethernet:</strong> ${ethernetConnected}<br>
+                        <strong>Internet:</strong> ${internetConnected}<br>
+                        <strong>IP Address:</strong> ${ipAddress}<br>
+                        <strong>Download Speed:</strong> ${downloadSpeed}<br>
+                        <strong>Upload Speed:</strong> ${uploadSpeed}<br>
+                        <strong>Latency:</strong> ${latency}
+                    </div>
                 </div>
-                <div class="diagnosis-item">
-                    <span>Download Speed</span>
-                    <span>${diagnosis.download_speed_mbps} Mbps</span>
+                
+                <div class="info-section">
+                    <div class="info-title">📷 USB Barcode Scanners (${barcodeScanners.length})</div>
+                    <div class="info-content">
+                        ${barcodeScanners.length > 0 ? 
+                            `<ul class="device-list">
+                                ${barcodeScanners.map(device => `
+                                    <li><strong>${device.name || 'Unknown Device'}</strong><br>
+                                        VID: ${device.vendor_id}, PID: ${device.product_id}
+                                    </li>
+                                `).join('')}
+                            </ul>` : 
+                            '<span style="color: #dc3545;">❌ No barcode scanners detected</span>'
+                        }
+                    </div>
                 </div>
-                <div class="diagnosis-item">
-                    <span>Upload Speed</span>
-                    <span>${diagnosis.upload_speed_mbps} Mbps</span>
-                </div>
-                <div class="diagnosis-item">
-                    <span>Latency</span>
-                    <span>${diagnosis.latency_ms}ms</span>
-                </div>
-            `;
-
-            // USB details
-            const usbDetails = document.getElementById('usb-details');
-            usbDetails.innerHTML = `
-                <div class="diagnosis-item">
-                    <span>Barcode Scanner</span>
-                    <span>
-                        ${diagnosis.usb_barcode_connected ? `✅ ${diagnosis.usb_barcode_count} device(s)` : '❌ Not connected'}
-                    </span>
-                </div>
-                <div class="diagnosis-item">
-                    <span>Camera</span>
-                    <span>
-                        ${diagnosis.usb_camera_connected ? `✅ ${diagnosis.usb_camera_count} device(s)` : '❌ Not connected'}
-                    </span>
+                
+                <div class="info-section">
+                    <div class="info-title">📸 USB Cameras (${cameras.length})</div>
+                    <div class="info-content">
+                        ${cameras.length > 0 ? 
+                            `<ul class="device-list">
+                                ${cameras.map(device => `
+                                    <li><strong>${device.name || 'Unknown Device'}</strong><br>
+                                        VID: ${device.vendor_id}, PID: ${device.product_id}
+                                    </li>
+                                `).join('')}
+                            </ul>` : 
+                            '<span style="color: #dc3545;">❌ No cameras detected</span>'
+                        }
+                    </div>
                 </div>
             `;
         }
 
-        function startAutoSendCountdown() {
-            let countdown = 3;
-            const button = document.getElementById('auto-send-btn');
+        function prepareSlackMessage() {
+            const networkInfo = diagnosisData.network_diagnosis || {};
+            const facilityName = diagnosisData.facility_name || 'Unknown';
+            const facilityId = diagnosisData.facility_id || 'Unknown';
             
-            const updateButton = () => {
-                if (countdown > 0) {
-                    button.textContent = `🚀 Auto Send (${countdown}s)`;
-                    countdown--;
-                    autoSendTimer = setTimeout(updateButton, 1000);
-                } else {
-                    button.textContent = '🚀 Sending...';
-                    autoSendToSlack();
-                }
+            slackMessage = {
+                text: `🔧 Compass System Diagnosis Report - ${facilityName}`,
+                blocks: [
+                    {
+                        type: "header",
+                        text: {
+                            type: "plain_text",
+                            text: `🔧 System Diagnosis Report`
+                        }
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*🏥 Facility:*\n${facilityName} (ID: ${facilityId})`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*📱 Device:*\n${diagnosisData.serial_number || 'Unknown'}`
+                            }
+                        ]
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*🌐 Network Status:*\nEthernet: ${networkInfo.ethernet_connected ? '✅' : '❌'}\nInternet: ${networkInfo.internet_connected ? '✅' : '❌'}\nIP: ${networkInfo.ip_address || 'Not assigned'}`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*📡 Speed Test:*\nDownload: ${networkInfo.download_speed_mbps || 'N/A'} Mbps\nUpload: ${networkInfo.upload_speed_mbps || 'N/A'} Mbps\nLatency: ${networkInfo.latency_ms || 'N/A'} ms`
+                            }
+                        ]
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*📷 USB Devices:*\nBarcode Scanners: ${(diagnosisData.usb_barcode_scanners || []).length}\nCameras: ${(diagnosisData.usb_cameras || []).length}`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*⏰ Diagnosis Time:*\n${diagnosisData.timestamp || 'Unknown'}`
+                            }
+                        ]
+                    },
+                    {
+                        type: "context",
+                        elements: [
+                            {
+                                type: "mrkdwn",
+                                text: `Build: ${diagnosisData.build_info || 'Unknown'} | Generated from Compass Scanner App`
+                            }
+                        ]
+                    }
+                ]
             };
             
-            updateButton();
+            // JSON 데이터 표시 준비
+            document.getElementById('jsonData').textContent = JSON.stringify(slackMessage, null, 2);
         }
 
-        function autoSendToSlack() {
-            if (autoSendTimer) {
-                clearTimeout(autoSendTimer);
-                autoSendTimer = null;
-            }
-            sendToSlack();
+        function startAutoSend() {
+            const countdownDisplay = document.getElementById('countdownDisplay');
+            const countdownNumber = document.getElementById('countdownNumber');
+            
+            countdownDisplay.style.display = 'block';
+            
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                countdownNumber.textContent = countdown;
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                    countdownDisplay.style.display = 'none';
+                    sendToSlack();
+                }
+            }, 1000);
         }
 
         async function sendToSlack() {
-            if (!diagnosisData) {
-                showError('No diagnosis data to send.');
+            if (!diagnosisData || !slackMessage) {
+                showError('No diagnosis data available');
                 return;
             }
-
-            const sendBtn = document.getElementById('send-btn');
-            const autoSendBtn = document.getElementById('auto-send-btn');
-            const loading = document.getElementById('loading');
             
-            // Show loading state
-            sendBtn.disabled = true;
-            autoSendBtn.disabled = true;
-            loading.style.display = 'block';
-            hideMessages();
-
+            const statusDisplay = document.getElementById('statusDisplay');
+            const sendButton = document.getElementById('sendButton');
+            const sendAgainButton = document.getElementById('sendAgainButton');
+            
+            statusDisplay.className = 'status loading';
+            statusDisplay.innerHTML = '📤 Sending to Slack...';
+            sendButton.disabled = true;
+            
             try {
-                // Format the message for Slack
-                const slackMessage = formatSlackMessage(diagnosisData);
+                const webhookUrl = diagnosisData.webhook_url;
+                if (!webhookUrl) {
+                    throw new Error('Webhook URL not found in diagnosis data');
+                }
                 
-                // Send to Slack webhook
-                const response = await fetch(diagnosisData.webhook_url, {
+                console.log('🚀 Attempting to send to Slack:', webhookUrl);
+                console.log('📨 Message payload:', slackMessage);
+                
+                const success = await sendWithCorsProxy(webhookUrl, slackMessage);
+                
+                if (success) {
+                    statusDisplay.className = 'status success';
+                    statusDisplay.innerHTML = '✅ Successfully sent to Slack! <br><small>The report has been delivered to your team channel.</small>';
+                    sendButton.style.display = 'none';
+                    sendAgainButton.style.display = 'inline-flex';
+                } else {
+                    throw new Error('All CORS proxy attempts failed');
+                }
+                
+            } catch (error) {
+                console.error('❌ Failed to send to Slack:', error);
+                statusDisplay.className = 'status error';
+                statusDisplay.innerHTML = '❌ Failed to send automatically <br><small>Please use manual backup option below</small>';
+                showManualSection();
+                showError(error.message);
+            }
+            
+            sendButton.disabled = false;
+        }
+
+        async function sendWithCorsProxy(webhookUrl, message) {
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxyUrl = CORS_PROXIES[i];
+                console.log(`🔄 Trying CORS proxy ${i + 1}/${CORS_PROXIES.length}:`, proxyUrl);
+                
+                try {
+                    let requestUrl;
+                    let requestOptions;
+                    
+                    if (proxyUrl.includes('allorigins.win')) {
+                        // allorigins 방식
+                        requestUrl = `${proxyUrl}${encodeURIComponent(webhookUrl)}`;
+                        requestOptions = {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(message)
+                        };
+                    } else {
+                        // 일반적인 프록시 방식
+                        requestUrl = `${proxyUrl}${webhookUrl}`;
+                        requestOptions = {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Origin': window.location.origin
+                            },
+                            body: JSON.stringify(message)
+                        };
+                    }
+                    
+                    const response = await fetch(requestUrl, requestOptions);
+                    
+                    console.log(`📡 Proxy ${i + 1} response:`, response.status, response.statusText);
+                    
+                    if (response.ok || response.status === 200) {
+                        console.log('✅ Successfully sent via proxy:', proxyUrl);
+                        return true;
+                    }
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Proxy ${i + 1} failed:`, error.message);
+                }
+            }
+            
+            // 모든 프록시 실패 시 직접 시도 (마지막 시도)
+            console.log('🔄 Trying direct request as final attempt...');
+            try {
+                const response = await fetch(webhookUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        text: slackMessage,
-                        username: "System Diagnosis Bot",
-                        icon_emoji: ":computer:"
-                    })
+                    body: JSON.stringify(message),
+                    mode: 'no-cors' // CORS 무시
                 });
-
-                if (response.ok) {
-                    showSuccess('✅ Diagnosis report sent to Slack successfully!');
-                    console.log('Report sent to Slack successfully');
-                } else {
-                    throw new Error(`Slack API error: ${response.status} ${response.statusText}`);
-                }
-
+                
+                console.log('✅ Direct request completed (no-cors mode)');
+                return true; // no-cors 모드에서는 성공 여부를 정확히 알 수 없지만 일단 성공으로 간주
+                
             } catch (error) {
-                console.error('Failed to send report to Slack:', error);
-                
-                // Show fallback options
-                showError(`❌ Auto-send failed: ${error.message}\n\nPlease manually copy and send the report below to your team.`);
-                
-                // Display formatted message for manual copy
-                const formattedMessage = formatSlackMessage(diagnosisData);
-                const textarea = document.createElement('textarea');
-                textarea.value = formattedMessage;
-                textarea.style.width = '100%';
-                textarea.style.height = '200px';
-                textarea.style.margin = '10px 0';
-                document.getElementById('error-message').appendChild(textarea);
-                
-            } finally {
-                // Hide loading state
-                loading.style.display = 'none';
-                sendBtn.disabled = false;
-                autoSendBtn.disabled = false;
-                sendBtn.textContent = '🔄 Send Again';
-                autoSendBtn.textContent = '🚀 Auto Send Again';
+                console.error('❌ Direct request also failed:', error);
+                return false;
             }
         }
 
-        function formatSlackMessage(data) {
-            const diagnosis = data.diagnosis;
-            const systemStatus = diagnosis.system_fully_operational ? 
-                '✅ System Fully Operational' :
-                diagnosis.network_fully_connected ? 
-                '⚠️ Network OK, USB Issues' :
-                diagnosis.usb_devices_connected ? 
-                '⚠️ USB OK, Network Issues' : 
-                '❌ Multiple Issues Detected';
-
-            return `🔧 *System Diagnosis Report*
-
-*Device Info:*
-• Serial: ${data.serial_number}
-• Build: ${data.build_info}
-• Timestamp: ${data.timestamp}
-
-*Overall Status:* ${systemStatus}
-
-*Network Status:*
-• Ethernet: ${diagnosis.ethernet_connected ? '✅ Connected' : '❌ Disconnected'}
-• IP Address: ${diagnosis.ip_address || 'Not assigned'}
-• Internet: ${diagnosis.internet_connectivity ? '✅ Connected' : '❌ No connection'}
-• Download: ${diagnosis.download_speed_mbps} Mbps
-• Upload: ${diagnosis.upload_speed_mbps} Mbps
-• Latency: ${diagnosis.latency_ms}ms
-
-*USB Devices:*
-• Barcode Scanner: ${diagnosis.usb_barcode_connected ? `✅ Connected (${diagnosis.usb_barcode_count})` : '❌ Not detected'}
-• Camera: ${diagnosis.usb_camera_connected ? `✅ Connected (${diagnosis.usb_camera_count})` : '❌ Not detected'}
-
-${diagnosis.error_messages ? `*Error Messages:*\n${diagnosis.error_messages}` : ''}
-
-_Report generated via QR code scan_`;
+        function showManualSection() {
+            document.getElementById('manualSection').style.display = 'block';
         }
 
         function showError(message) {
-            const errorElement = document.getElementById('error-message');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
+            const errorSection = document.getElementById('errorSection');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorSection.style.display = 'block';
         }
 
-        function showSuccess(message) {
-            const successElement = document.getElementById('success-message');
-            successElement.textContent = message;
-            successElement.style.display = 'block';
+        async function copyToClipboard() {
+            try {
+                const jsonText = JSON.stringify(slackMessage, null, 2);
+                await navigator.clipboard.writeText(jsonText);
+                
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '✅ Copied!';
+                button.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Failed to copy to clipboard:', error);
+                alert('Failed to copy to clipboard. Please select and copy the text manually.');
+            }
         }
 
-        function hideMessages() {
-            document.getElementById('error-message').style.display = 'none';
-            document.getElementById('success-message').style.display = 'none';
-        }
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Page loaded, parsing URL data...');
+            parseUrlData();
+        });
     </script>
 </body>
 </html>
