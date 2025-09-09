@@ -573,8 +573,8 @@
 
 🎯 Status: ${mainStatus}`;
                 
-                // 🌐 네트워크 문제 시 상세 정보 추가 (전체 데이터 사용)
-                if (!networkOk) {
+                // 🌐 항상 네트워크 상세 정보 추가 (전체 데이터 사용)
+                if (true) { // 항상 네트워크 정보 표시 (원래: !networkOk)
                     // 🎯 IP 주소 - 전체 표시
                     const ipDisplay = diagnosisData.ip_assigned && diagnosisData.full_ip_address !== '0.0.0.0'
                         ? diagnosisData.full_ip_address
@@ -597,8 +597,8 @@
 • Latency: ${latency} ms` : ''}`;
                 }
                 
-                // 🔌 USB 문제 시 상세 정보 추가
-                if (!usbOk) {
+                // 🔌 항상 USB 상세 정보 추가  
+                if (true) { // 항상 USB 정보 표시 (원래: !usbOk)
                     plainTextMessage += `
 📷 USB Status:
 • Scanner: ${diagnosisData.usb_barcode_connected ? 'Connected' : 'Not detected'}
