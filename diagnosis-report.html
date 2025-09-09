@@ -278,6 +278,19 @@
         
         let currentProxyIndex = 0;
 
+        // 🔧 안전한 값 가져오기 헬퍼 함수
+        function safeGet(obj, path, defaultValue = null) {
+            try {
+                return path.split('.').reduce((current, key) => {
+                    return (current && typeof current === 'object' && current[key] !== undefined) 
+                        ? current[key] : defaultValue;
+                }, obj);
+            } catch (e) {
+                console.warn('⚠️ Safe get failed:', path, e);
+                return defaultValue;
+            }
+        }
+
         function parseUrlData() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -289,22 +302,77 @@
                 
                 console.log('🔍 Encoded data length:', encodedData.length);
                 
-                // Base64 디코딩
-                const jsonString = atob(encodedData);
-                console.log('📝 Decoded JSON string:', jsonString.substring(0, 200) + '...');
+                // 안전한 Base64 디코딩
+                let jsonString = '';
+                try {
+                    jsonString = atob(encodedData);
+                    console.log('📝 Decoded JSON string (first 200 chars):', jsonString.substring(0, 200));
+                } catch (decodeError) {
+                    console.error('❌ Base64 decode failed:', decodeError);
+                    throw new Error('Invalid Base64 encoding: ' + decodeError.message);
+                }
                 
-                diagnosisData = JSON.parse(jsonString);
-                console.log('✅ Parsed diagnosis data:', diagnosisData);
+                // 안전한 JSON 파싱
+                try {
+                    diagnosisData = JSON.parse(jsonString);
+                    console.log('✅ Parsed diagnosis data successfully');
+                    
+                    // 필수 데이터 최소 구조 보장
+                    diagnosisData = {
+                        timestamp: safeGet(diagnosisData, 'timestamp', new Date().toLocaleString()),
+                        serial_number: safeGet(diagnosisData, 'serial_number', 'Unknown'),
+                        build_info: safeGet(diagnosisData, 'build_info', 'Unknown'),
+                        facility_name: safeGet(diagnosisData, 'facility_name', 'Unknown Facility'),
+                        facility_id: safeGet(diagnosisData, 'facility_id', 0),
+                        webhook_url: safeGet(diagnosisData, 'webhook_url', ''),
+                        network_diagnosis: safeGet(diagnosisData, 'network_diagnosis', {}),
+                        usb_barcode_scanners: safeGet(diagnosisData, 'usb_barcode_scanners', {}),
+                        usb_cameras: safeGet(diagnosisData, 'usb_cameras', {}),
+                        ...diagnosisData // 원본 데이터 유지
+                    };
+                    
+                    console.log('🔧 Data structure normalized:', {
+                        'Has network_diagnosis': !!diagnosisData.network_diagnosis,
+                        'Has usb_barcode_scanners': !!diagnosisData.usb_barcode_scanners,
+                        'Has usb_cameras': !!diagnosisData.usb_cameras,
+                        'Webhook URL': !!diagnosisData.webhook_url
+                    });
+                    
+                } catch (jsonError) {
+                    console.error('❌ JSON parse failed:', jsonError);
+                    console.error('❌ JSON string that failed:', jsonString.substring(0, 500));
+                    throw new Error('Invalid JSON format: ' + jsonError.message);
+                }
                 
-                displayDiagnosisData();
-                prepareSlackMessage();
+                // 안전한 화면 표시 및 전송 준비
+                try {
+                    displayDiagnosisData();
+                } catch (displayError) {
+                    console.warn('⚠️ Display failed but continuing:', displayError);
+                }
                 
-                // 자동 전송 시작 (3초 카운트다운)
+                try {
+                    prepareSlackMessage();
+                } catch (prepareError) {
+                    console.warn('⚠️ Prepare message failed but continuing:', prepareError);
+                    // 최소한의 메시지라도 만들기
+                    createMinimalSlackMessage();
+                }
+                
+                // 전송은 무조건 시도
                 startAutoSend();
                 
             } catch (error) {
-                console.error('❌ Error parsing URL data:', error);
-                showError('Failed to parse diagnosis data: ' + error.message);
+                console.error('❌ Critical error parsing URL data:', error);
+                
+                // 완전 실패 시에도 최소한의 오류 리포트는 전송
+                try {
+                    createErrorReportMessage(error);
+                    startAutoSend();
+                } catch (finalError) {
+                    console.error('❌ Even error report failed:', finalError);
+                    showError('Complete parsing failure: ' + error.message);
+                }
             }
         }
 
@@ -393,68 +461,158 @@
             `;
         }
 
-        // ✅ 완전히 수정된 prepareSlackMessage 함수 (blocks 완전 제거!)
         function prepareSlackMessage() {
-            const networkInfo = diagnosisData.network_diagnosis || {};
-            const facilityName = diagnosisData.facility_name || 'Unknown';
-            const facilityId = diagnosisData.facility_id || 'Unknown';
-            const serialNumber = diagnosisData.serial_number || 'Unknown';
-            const buildInfo = diagnosisData.build_info || 'Unknown';
-            const timestamp = diagnosisData.timestamp || 'Unknown';
-            
-            // USB 장치 정보
-            const barcodeScanners = diagnosisData.usb_barcode_scanners || [];
-            const cameras = diagnosisData.usb_cameras || [];
-            
-            // 시스템 상태 판단
-            const ethernetOk = networkInfo.ethernet_connected;
-            const internetOk = networkInfo.internet_connected;
-            const usbOk = barcodeScanners.length > 0 && cameras.length > 0;
-            
-            let systemStatus;
-            if (ethernetOk && internetOk && usbOk) {
-                systemStatus = "✅ System Fully Operational";
-            } else if (ethernetOk && internetOk && !usbOk) {
-                systemStatus = "⚠️ Network OK, USB Issues";
-            } else if (!ethernetOk || !internetOk) {
-                systemStatus = "❌ Network Issues Detected";
-            } else {
-                systemStatus = "❌ Multiple Issues Detected";
+            try {
+                console.log('🔧 Preparing Slack message with safe data access...');
+                
+                // 🔒 완전 안전한 데이터 접근
+                const facilityName = safeGet(diagnosisData, 'facility_name', 'Unknown Facility');
+                const serialNumber = safeGet(diagnosisData, 'serial_number', 'Unknown');
+                const timestamp = safeGet(diagnosisData, 'timestamp', new Date().toLocaleString());
+                
+                // 🔧 네트워크 정보 안전 접근 (여러 경로 시도)
+                const networkInfo = safeGet(diagnosisData, 'network_diagnosis', {});
+                const ethernetConnected = safeGet(networkInfo, 'ethernet_connected', false) || 
+                                        safeGet(networkInfo, 'ethernet_cable_connected', false);
+                const internetConnected = safeGet(networkInfo, 'internet_connected', false) || 
+                                        safeGet(networkInfo, 'internet_connectivity', false);
+                
+                // 🔧 USB 정보 안전 접근 (Android 앱의 모든 경로 시도)
+                let usbBarcodeConnected = false;
+                let usbCameraConnected = false;
+                
+                // 경로 1: usb_barcode_scanners 객체의 connected 필드
+                if (safeGet(diagnosisData, 'usb_barcode_scanners.connected')) {
+                    usbBarcodeConnected = safeGet(diagnosisData, 'usb_barcode_scanners.connected', false);
+                }
+                // 경로 2: network_diagnosis 안의 usb_barcode_connected
+                else if (safeGet(networkInfo, 'usb_barcode_connected') !== null) {
+                    usbBarcodeConnected = safeGet(networkInfo, 'usb_barcode_connected', false);
+                }
+                // 경로 3: 직접 usb_barcode_connected 필드
+                else if (safeGet(diagnosisData, 'usb_barcode_connected') !== null) {
+                    usbBarcodeConnected = safeGet(diagnosisData, 'usb_barcode_connected', false);
+                }
+                
+                // USB 카메라도 동일한 방식
+                if (safeGet(diagnosisData, 'usb_cameras.connected')) {
+                    usbCameraConnected = safeGet(diagnosisData, 'usb_cameras.connected', false);
+                }
+                else if (safeGet(networkInfo, 'usb_camera_connected') !== null) {
+                    usbCameraConnected = safeGet(networkInfo, 'usb_camera_connected', false);
+                }
+                else if (safeGet(diagnosisData, 'usb_camera_connected') !== null) {
+                    usbCameraConnected = safeGet(diagnosisData, 'usb_camera_connected', false);
+                }
+                
+                console.log('🔍 USB Status Debug:', {
+                    'usb_barcode_scanners': diagnosisData?.usb_barcode_scanners,
+                    'usb_cameras': diagnosisData?.usb_cameras,
+                    'network_diagnosis USB': {
+                        'usb_barcode_connected': networkInfo?.usb_barcode_connected,
+                        'usb_camera_connected': networkInfo?.usb_camera_connected
+                    },
+                    'Direct USB fields': {
+                        'usb_barcode_connected': diagnosisData?.usb_barcode_connected,
+                        'usb_camera_connected': diagnosisData?.usb_camera_connected
+                    },
+                    'Final parsed': { usbBarcodeConnected, usbCameraConnected }
+                });
+                
+                // 🎯 핵심 상태 판단
+                const networkOk = ethernetConnected && internetConnected;
+                const usbOk = usbBarcodeConnected && usbCameraConnected;
+                
+                let mainStatus = "";
+                if (networkOk && usbOk) {
+                    mainStatus = "✅ System OK";
+                } else if (!networkOk && !usbOk) {
+                    mainStatus = "❌ Network + USB Issues";
+                } else if (!networkOk) {
+                    mainStatus = "❌ Network Issue";
+                } else if (!usbOk) {
+                    mainStatus = "⚠️ USB Issue";
+                } else {
+                    mainStatus = "⚠️ Unknown Issue";
+                }
+                
+                // 🚀 간단하고 확실한 메시지 생성
+                const plainTextMessage = `🔧 ${facilityName} Scanner Report
+
+📱 Serial: ${serialNumber}
+⏰ Time: ${timestamp}
+
+🎯 Status: ${mainStatus}${!networkOk ? `
+🌐 Network: ${ethernetConnected ? 'Cable OK' : 'Cable NG'} / ${internetConnected ? 'Internet OK' : 'Internet NG'}` : ''}${!usbOk ? `
+📷 USB: ${usbBarcodeConnected ? 'Scanner OK' : 'Scanner NG'} / ${usbCameraConnected ? 'Camera OK' : 'Camera NG'}` : ''}`;
+                
+                slackMessage = {
+                    text: plainTextMessage
+                };
+                
+                console.log('✅ Slack message prepared successfully:', slackMessage);
+                
+                // JSON 데이터 표시 준비
+                const jsonDataElement = document.getElementById('jsonData');
+                if (jsonDataElement) {
+                    jsonDataElement.textContent = JSON.stringify(slackMessage, null, 2);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error in prepareSlackMessage:', error);
+                // 오류 발생 시 최소한의 메시지 생성
+                createMinimalSlackMessage();
             }
+        }
+        
+        // 🔧 최소한의 메시지 생성 (완전 실패 시 fallback)
+        function createMinimalSlackMessage() {
+            console.log('🆘 Creating minimal Slack message as fallback...');
             
-            // Plain text 메시지 생성 (SlackWebhookService.kt와 동일한 형태)
-            const plainTextMessage = `🔧 System Diagnosis Report - ${facilityName}
-
-*Facility Info:*
-• Name: ${facilityName}
-• ID: ${facilityId}
-• Device Serial: ${serialNumber}
-• Build: ${buildInfo}
-• Timestamp: ${timestamp}
-
-*Overall Status:* ${systemStatus}
-
-*Network Status:*
-• Ethernet: ${ethernetOk ? '✅ Connected' : '❌ Disconnected'}
-• IP Address: ${networkInfo.ip_address || 'Not assigned'}
-• Internet: ${internetOk ? '✅ Connected' : '❌ No connection'}
-• Download Speed: ${networkInfo.download_speed_mbps || 'N/A'} Mbps
-• Upload Speed: ${networkInfo.upload_speed_mbps || 'N/A'} Mbps
-• Latency: ${networkInfo.latency_ms || 'N/A'}ms
-
-*USB Devices:*
-• Barcode Scanners: ${barcodeScanners.length > 0 ? `✅ Connected (${barcodeScanners.length})` : '❌ Not detected'}
-• Cameras: ${cameras.length > 0 ? `✅ Connected (${cameras.length})` : '❌ Not detected'}
-
-_Report generated via QR code scan from Compass Scanner App_`;
+            const facilityName = (diagnosisData && diagnosisData.facility_name) || 'Unknown Facility';
+            const serialNumber = (diagnosisData && diagnosisData.serial_number) || 'Unknown';
+            const timestamp = (diagnosisData && diagnosisData.timestamp) || new Date().toLocaleString();
             
-            // ✅ 핵심: blocks 없이 text만 사용! (invalid_blocks 오류 완전 해결)
             slackMessage = {
-                text: plainTextMessage
+                text: `🔧 ${facilityName} Scanner Report
+
+📱 Serial: ${serialNumber}
+⏰ Time: ${timestamp}
+
+⚠️ Diagnosis data parsing failed, but device is reporting via QR code.
+Please check device manually or contact support.`
             };
             
-            // JSON 데이터 표시 준비
-            document.getElementById('jsonData').textContent = JSON.stringify(slackMessage, null, 2);
+            console.log('✅ Minimal message created:', slackMessage);
+            
+            const jsonDataElement = document.getElementById('jsonData');
+            if (jsonDataElement) {
+                jsonDataElement.textContent = JSON.stringify(slackMessage, null, 2);
+            }
+        }
+        
+        // 🚨 오류 리포트 메시지 생성 (파싱 완전 실패 시)
+        function createErrorReportMessage(error) {
+            console.log('🚨 Creating error report message...');
+            
+            slackMessage = {
+                text: `🚨 Scanner QR Code Error Report
+
+⏰ Time: ${new Date().toLocaleString()}
+❌ Error: QR data parsing failed
+
+🔍 Error Details: ${error.message}
+
+🔧 Action Required: Please check scanner device or contact technical support.
+Device attempted to send diagnosis but data was corrupted or invalid.`
+            };
+            
+            console.log('✅ Error report created:', slackMessage);
+            
+            const jsonDataElement = document.getElementById('jsonData');
+            if (jsonDataElement) {
+                jsonDataElement.textContent = JSON.stringify(slackMessage, null, 2);
+            }
         }
 
         function startAutoSend() {
