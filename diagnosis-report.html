@@ -393,7 +393,7 @@
             `;
         }
 
-        // ✅ 수정된 prepareSlackMessage 함수 (Block Kit 제거, Plain Text만 사용)
+        // ✅ 완전히 수정된 prepareSlackMessage 함수 (blocks 완전 제거!)
         function prepareSlackMessage() {
             const networkInfo = diagnosisData.network_diagnosis || {};
             const facilityName = diagnosisData.facility_name || 'Unknown';
@@ -448,7 +448,7 @@
 
 _Report generated via QR code scan from Compass Scanner App_`;
             
-            // 간단하고 확실한 text만 사용 (blocks 완전 제거)
+            // ✅ 핵심: blocks 없이 text만 사용! (invalid_blocks 오류 완전 해결)
             slackMessage = {
                 text: plainTextMessage
             };
