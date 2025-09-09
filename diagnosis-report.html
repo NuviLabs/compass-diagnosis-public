@@ -268,6 +268,9 @@
         let diagnosisData = null;
         let slackMessage = null;
         
+        // 🔧 슬랙 웹훅 URL 하드코딩 (QR 크기 최소화)
+        const SLACK_WEBHOOK_URL = 'https://hooks.slack.com/triggers/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';
+        
         // CORS 우회를 위한 여러 프록시 서버 목록
         const CORS_PROXIES = [
             'https://cors-anywhere.herokuapp.com/',
@@ -291,6 +294,7 @@
             }
         }
 
+        // 🚀 초간단 구분자 기반 파싱 (QR 크기 대폭 감소)
         function parseUrlData() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -302,64 +306,61 @@
                 
                 console.log('🔍 Encoded data length:', encodedData.length);
                 
-                // 안전한 Base64 디코딩
-                let jsonString = '';
+                // 📦 Base64 디코딩하여 간단한 구분자 문자열 얻기
+                let dataString = '';
                 try {
-                    jsonString = atob(encodedData);
-                    console.log('📝 Decoded JSON string (first 200 chars):', jsonString.substring(0, 200));
+                    dataString = atob(encodedData);
+                    console.log('📝 Decoded data string:', dataString);
                 } catch (decodeError) {
                     console.error('❌ Base64 decode failed:', decodeError);
                     throw new Error('Invalid Base64 encoding: ' + decodeError.message);
                 }
                 
-                // 안전한 JSON 파싱
-                try {
-                    diagnosisData = JSON.parse(jsonString);
-                    console.log('✅ Parsed diagnosis data successfully');
-                    
-                    // 필수 데이터 최소 구조 보장
-                    diagnosisData = {
-                        timestamp: safeGet(diagnosisData, 'timestamp', new Date().toLocaleString()),
-                        serial_number: safeGet(diagnosisData, 'serial_number', 'Unknown'),
-                        build_info: safeGet(diagnosisData, 'build_info', 'Unknown'),
-                        facility_name: safeGet(diagnosisData, 'facility_name', 'Unknown Facility'),
-                        facility_id: safeGet(diagnosisData, 'facility_id', 0),
-                        webhook_url: safeGet(diagnosisData, 'webhook_url', ''),
-                        network_diagnosis: safeGet(diagnosisData, 'network_diagnosis', {}),
-                        usb_barcode_scanners: safeGet(diagnosisData, 'usb_barcode_scanners', {}),
-                        usb_cameras: safeGet(diagnosisData, 'usb_cameras', {}),
-                        ...diagnosisData // 원본 데이터 유지
-                    };
-                    
-                    console.log('🔧 Data structure normalized:', {
-                        'Has network_diagnosis': !!diagnosisData.network_diagnosis,
-                        'Has usb_barcode_scanners': !!diagnosisData.usb_barcode_scanners,
-                        'Has usb_cameras': !!diagnosisData.usb_cameras,
-                        'Webhook URL': !!diagnosisData.webhook_url
-                    });
-                    
-                } catch (jsonError) {
-                    console.error('❌ JSON parse failed:', jsonError);
-                    console.error('❌ JSON string that failed:', jsonString.substring(0, 500));
-                    throw new Error('Invalid JSON format: ' + jsonError.message);
-                }
+                // 🔧 파이프(|) 구분자로 값들 파싱 (전체 데이터 - 압축 없음)
+                // 순서: facility|serial|timestamp|ethernet|internet|ip_assigned|usb_barcode|usb_camera|full_ip|download_float|upload_float|latency
+                const values = dataString.split('|');
+                console.log('📋 Parsed values (full data):', values);
                 
-                // 안전한 화면 표시 및 전송 준비
+                // 🎯 전체 데이터 구조로 diagnosisData 생성 (압축 해제)
+                diagnosisData = {
+                    facility_name: values[0] || 'Unknown Facility',
+                    serial_number: values[1] || 'Unknown',
+                    timestamp: values[2] || new Date().toLocaleString(),
+                    ethernet_connected: (values[3] === '1'),
+                    internet_connected: (values[4] === '1'),
+                    ip_assigned: (values[5] === '1'),
+                    usb_barcode_connected: (values[6] === '1'),
+                    usb_camera_connected: (values[7] === '1'),
+                    full_ip_address: values[8] || '0.0.0.0',
+                    download_speed_mbps: parseFloat(values[9]) || 0.0,
+                    upload_speed_mbps: parseFloat(values[10]) || 0.0,
+                    latency_ms: parseInt(values[11]) || 0
+                };
+                
+                console.log('🔍 Full network details parsed:', {
+                    'IP Assigned': diagnosisData.ip_assigned,
+                    'Full IP Address': diagnosisData.full_ip_address,
+                    'Download Speed': diagnosisData.download_speed_mbps + ' Mbps',
+                    'Upload Speed': diagnosisData.upload_speed_mbps + ' Mbps',
+                    'Latency': diagnosisData.latency_ms + ' ms'
+                });
+                
+                console.log('✅ Simple parsing completed:', diagnosisData);
+                
+                // 화면 표시 및 전송
                 try {
-                    displayDiagnosisData();
+                    displaySimpleDiagnosisData();
                 } catch (displayError) {
                     console.warn('⚠️ Display failed but continuing:', displayError);
                 }
                 
                 try {
-                    prepareSlackMessage();
+                    prepareSimpleSlackMessage();
                 } catch (prepareError) {
                     console.warn('⚠️ Prepare message failed but continuing:', prepareError);
-                    // 최소한의 메시지라도 만들기
                     createMinimalSlackMessage();
                 }
                 
-                // 전송은 무조건 시도
                 startAutoSend();
                 
             } catch (error) {
@@ -374,6 +375,80 @@
                     showError('Complete parsing failure: ' + error.message);
                 }
             }
+        }
+
+        // 🔧 상세 정보 포함 화면 표시 (전체 데이터 - 압축 없음)
+        function displaySimpleDiagnosisData() {
+            const content = document.getElementById('diagnosisContent');
+            
+            const facilityName = diagnosisData.facility_name || 'Unknown Facility';
+            const serialNumber = diagnosisData.serial_number || 'Unknown';
+            const timestamp = diagnosisData.timestamp || 'Unknown';
+            
+            // 🌐 네트워크 상태 (전체 데이터)
+            const ethernetConnected = diagnosisData.ethernet_connected ? '✅ Connected' : '❌ Disconnected';
+            const internetConnected = diagnosisData.internet_connected ? '✅ Connected' : '❌ Disconnected';
+            const ipAssigned = diagnosisData.ip_assigned ? '✅ Assigned' : '❌ Not assigned';
+            
+            // 🎯 IP 주소 - 그대로 표시 (압축 해제)
+            const ipDisplay = diagnosisData.ip_assigned && diagnosisData.full_ip_address !== '0.0.0.0' 
+                ? diagnosisData.full_ip_address
+                : 'Not assigned';
+            
+            // 🎯 속도 및 레이턴시 - 단위 하드코딩, 값만 사용
+            const downloadSpeed = diagnosisData.download_speed_mbps > 0 
+                ? `${diagnosisData.download_speed_mbps} Mbps` 
+                : 'N/A';
+                
+            const uploadSpeed = diagnosisData.upload_speed_mbps > 0 
+                ? `${diagnosisData.upload_speed_mbps} Mbps` 
+                : 'N/A';
+                
+            const latency = diagnosisData.latency_ms > 0 
+                ? `${diagnosisData.latency_ms} ms` 
+                : 'N/A';
+            
+            // 🔌 USB 장치 상태
+            const usbBarcodeConnected = diagnosisData.usb_barcode_connected ? '✅ Connected' : '❌ Not detected';
+            const usbCameraConnected = diagnosisData.usb_camera_connected ? '✅ Connected' : '❌ Not detected';
+            
+            content.innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🏥 Facility Information</div>
+                    <div class="info-content">
+                        <strong>Name:</strong> ${facilityName}
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">📱 Device Information</div>
+                    <div class="info-content">
+                        <strong>Serial Number:</strong> ${serialNumber}<br>
+                        <strong>Diagnosis Time:</strong> ${timestamp}
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">🌐 Network Status (Full Details)</div>
+                    <div class="info-content">
+                        <strong>Ethernet Cable:</strong> ${ethernetConnected}<br>
+                        <strong>Internet Connection:</strong> ${internetConnected}<br>
+                        <strong>IP Address Assignment:</strong> ${ipAssigned}<br>
+                        <strong>IP Address:</strong> ${ipDisplay}<br>
+                        <strong>Download Speed:</strong> ${downloadSpeed}<br>
+                        <strong>Upload Speed:</strong> ${uploadSpeed}<br>
+                        <strong>Network Latency:</strong> ${latency}
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">📷 USB Devices</div>
+                    <div class="info-content">
+                        <strong>Barcode Scanners:</strong> ${usbBarcodeConnected}<br>
+                        <strong>Cameras:</strong> ${usbCameraConnected}
+                    </div>
+                </div>
+            `;
         }
 
         function displayDiagnosisData() {
@@ -459,6 +534,92 @@
                     </div>
                 </div>
             `;
+        }
+
+        // 🚀 상세 정보 포함 슬랙 메시지 준비 (전체 데이터 - 압축 없음)
+        function prepareSimpleSlackMessage() {
+            try {
+                console.log('🔧 Preparing detailed Slack message (full data)...');
+                
+                const facilityName = diagnosisData.facility_name || 'Unknown Facility';
+                const serialNumber = diagnosisData.serial_number || 'Unknown';
+                const timestamp = diagnosisData.timestamp || new Date().toLocaleString();
+                
+                // 🔍 상태 판단
+                const ethernetOk = diagnosisData.ethernet_connected;
+                const internetOk = diagnosisData.internet_connected;
+                const ipOk = diagnosisData.ip_assigned;
+                const networkOk = ethernetOk && internetOk && ipOk;
+                const usbOk = diagnosisData.usb_barcode_connected && diagnosisData.usb_camera_connected;
+                
+                let mainStatus = "";
+                if (networkOk && usbOk) {
+                    mainStatus = "✅ System OK";
+                } else if (!networkOk && !usbOk) {
+                    mainStatus = "❌ Network + USB Issues";
+                } else if (!networkOk) {
+                    mainStatus = "❌ Network Issue";
+                } else if (!usbOk) {
+                    mainStatus = "⚠️ USB Issue";
+                } else {
+                    mainStatus = "⚠️ Unknown Issue";
+                }
+                
+                // 🎯 기본 메시지
+                let plainTextMessage = `🔧 ${facilityName} Scanner Report
+
+📱 Serial: ${serialNumber}
+⏰ Time: ${timestamp}
+
+🎯 Status: ${mainStatus}`;
+                
+                // 🌐 네트워크 문제 시 상세 정보 추가 (전체 데이터 사용)
+                if (!networkOk) {
+                    // 🎯 IP 주소 - 전체 표시
+                    const ipDisplay = diagnosisData.ip_assigned && diagnosisData.full_ip_address !== '0.0.0.0'
+                        ? diagnosisData.full_ip_address
+                        : 'Not assigned';
+                    
+                    // 🎯 속도 - 소수점 포함, 단위(Mbps) 하드코딩
+                    const downloadSpeed = diagnosisData.download_speed_mbps || 0.0;
+                    const uploadSpeed = diagnosisData.upload_speed_mbps || 0.0;
+                    
+                    // 🎯 레이턴시 - 단위(ms) 하드코딩
+                    const latency = diagnosisData.latency_ms || 0;
+                    
+                    plainTextMessage += `
+🌐 Network Details:
+• Ethernet: ${ethernetOk ? 'Cable OK' : 'Cable NG'}
+• Internet: ${internetOk ? 'Connection OK' : 'Connection NG'}
+• IP Assignment: ${ipOk ? 'OK' : 'NG'}
+• IP Address: ${ipDisplay}${internetOk ? `
+• Speed: ${downloadSpeed} Mbps ↓ / ${uploadSpeed} Mbps ↑
+• Latency: ${latency} ms` : ''}`;
+                }
+                
+                // 🔌 USB 문제 시 상세 정보 추가
+                if (!usbOk) {
+                    plainTextMessage += `
+📷 USB Status:
+• Scanner: ${diagnosisData.usb_barcode_connected ? 'Connected' : 'Not detected'}
+• Camera: ${diagnosisData.usb_camera_connected ? 'Connected' : 'Not detected'}`;
+                }
+                
+                slackMessage = {
+                    text: plainTextMessage
+                };
+                
+                console.log('✅ Full data Slack message prepared:', slackMessage);
+                
+                const jsonDataElement = document.getElementById('jsonData');
+                if (jsonDataElement) {
+                    jsonDataElement.textContent = JSON.stringify(slackMessage, null, 2);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error in prepareSimpleSlackMessage:', error);
+                createMinimalSlackMessage();
+            }
         }
 
         function prepareSlackMessage() {
@@ -649,10 +810,8 @@ Device attempted to send diagnosis but data was corrupted or invalid.`
             sendButton.disabled = true;
             
             try {
-                const webhookUrl = diagnosisData.webhook_url;
-                if (!webhookUrl) {
-                    throw new Error('Webhook URL not found in diagnosis data');
-                }
+                // 🔧 하드코딩된 웹훅 URL 사용 (QR에서 제거)
+                const webhookUrl = SLACK_WEBHOOK_URL;
                 
                 console.log('🚀 Attempting to send to Slack:', webhookUrl);
                 console.log('📨 Message payload:', slackMessage);
