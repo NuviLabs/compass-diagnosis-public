@@ -416,8 +416,8 @@
                 return "❌ Multiple Issues Detected";
             })();
             
-            // SlackWebhookService.kt 형식에 맞는 메시지 생성
-            const messageText = `🔧 *System Diagnosis Report*
+            // Plain text 메시지 생성 (SlackWebhookService.kt 스타일)
+            const plainTextMessage = `🔧 System Diagnosis Report - ${facilityName}
 
 *Facility Info:*
 • Name: ${facilityName}
@@ -442,12 +442,67 @@
 
 _Report generated via QR code scan from Compass Scanner App_`;
 
-            // SlackWebhookService.kt와 동일한 형식
+            // 원래 잘 작동하던 Blocks API 형식 유지 + plain text 추가
             slackMessage = {
-                text: messageText,
-                username: "System Diagnosis Bot",
-                icon_emoji: ":computer:",
-                channel: "#squad-hospital-scanner-issue-alert"
+                text: plainTextMessage,
+                blocks: [
+                    {
+                        type: "header",
+                        text: {
+                            type: "plain_text",
+                            text: `🔧 System Diagnosis Report`
+                        }
+                    },
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: `*🏥 Facility Info:*\n• Name: ${facilityName}\n• ID: ${facilityId}\n• Device Serial: ${serialNumber}\n• Build: ${buildInfo}\n• Timestamp: ${timestamp}`
+                        }
+                    },
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: `*Overall Status:* ${systemStatus}`
+                        }
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*🌐 Network Status:*\n• Ethernet: ${networkInfo.ethernet_connected ? '✅ Connected' : '❌ Disconnected'}\n• Internet: ${networkInfo.internet_connected ? '✅ Connected' : '❌ No connection'}\n• IP: ${networkInfo.ip_address || 'Not assigned'}`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*📡 Speed Test:*\n• Download: ${networkInfo.download_speed_mbps || 'N/A'} Mbps\n• Upload: ${networkInfo.upload_speed_mbps || 'N/A'} Mbps\n• Latency: ${networkInfo.latency_ms || 'N/A'}ms`
+                            }
+                        ]
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
+                                type: "mrkdwn",
+                                text: `*📷 USB Devices:*\n• Barcode Scanners: ${barcodeScanners.length > 0 ? `✅ Connected (${barcodeScanners.length})` : '❌ Not detected'}\n• Cameras: ${cameras.length > 0 ? `✅ Connected (${cameras.length})` : '❌ Not detected'}`
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*📱 Device Info:*\n• Serial: ${serialNumber}\n• Build: ${buildInfo}`
+                            }
+                        ]
+                    },
+                    {
+                        type: "context",
+                        elements: [
+                            {
+                                type: "mrkdwn",
+                                text: `_Report generated via QR code scan from Compass Scanner App • ${timestamp}_`
+                            }
+                        ]
+                    }
+                ]
             };
             
             // JSON 데이터 표시 준비
@@ -496,13 +551,8 @@ _Report generated via QR code scan from Compass Scanner App_`;
                 console.log('🚀 Attempting to send to Slack:', webhookUrl);
                 console.log('📨 Message payload:', slackMessage);
                 
-                // SlackWebhookService.kt와 동일하게 채널 설정 (메시지에 channel 필드 추가)
-                const messageWithChannel = {
-                    ...slackMessage,
-                    channel: "#squad-hospital-scanner-issue-alert"
-                };
-                
-                const success = await sendWithCorsProxy(webhookUrl, messageWithChannel);
+                // 원래 작동하던 형식으로 전송 (추가 필드 없이)
+                const success = await sendWithCorsProxy(webhookUrl, slackMessage);
                 
                 if (success) {
                     statusDisplay.className = 'status success';
